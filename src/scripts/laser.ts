@@ -2,7 +2,7 @@
 // wherever it passes over the letters, they get engraved. If nobody moves the mouse,
 // the laser rasters the whole name once on its own.
 
-export async function startLaser(canvas: HTMLCanvasElement, lines: string[], resetBtn?: HTMLButtonElement | null) {
+export async function startLaser(canvas: HTMLCanvasElement, lines: string[]) {
   const ctx = canvas.getContext('2d')!;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const FONT = '"Big Shoulders Stencil Variable"';
@@ -251,14 +251,6 @@ export async function startLaser(canvas: HTMLCanvasElement, lines: string[], res
   );
   host.addEventListener('pointerleave', () => {
     if (!auto) on = false;
-  });
-
-  resetBtn?.addEventListener('click', () => {
-    complete = false;
-    mctx.clearRect(0, 0, w, h);
-    sctx.clearRect(0, 0, w, h);
-    dirty = true;
-    resetBtn.textContent = 'Engrave it again with your mouse';
   });
 
   let rt: number | undefined;
