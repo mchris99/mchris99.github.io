@@ -1,19 +1,21 @@
-/* Laser-cut sheet: gray laser bed, birch plywood, red cut lines, blue score lines. */
+/* Laser-cut sheet on a dark steel laser bed: birch plywood parts, red cut lines, blue score lines. */
 :root {
-  --bed: #e4e7ea;
-  --bed-2: #d6dade;
+  --bed: #131518;
+  --bed-2: #1d2024;
+  --surface: #1b1e22;
+  --line: #3a3f46;
   --ply: #d9b98c;
-  --ply-dark: #b98f5a;
-  --ink: #1a120c;
-  --ink-soft: #5a4a3c;
-  --cut: #e5302a;
-  --score: #2b59f5;
-  --white: #fbfbfa;
+  --ply-dark: #a87d4a;
+  --ink: #e6e8ea;
+  --ink-soft: #9aa1a8;
+  --edge: var(--ply-dark);
+  --cut: #ff4034;
+  --score: #6b8dff;
   --stencil: 'Big Shoulders Stencil Variable', 'Arial Narrow', sans-serif;
   --body: 'Archivo Variable', system-ui, sans-serif;
   --measure: 62ch;
   --maxw: 1200px;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 *,
@@ -58,7 +60,7 @@ img {
 }
 ::selection {
   background: var(--cut);
-  color: var(--white);
+  color: #fff;
 }
 :focus-visible {
   outline: 3px solid var(--score);
@@ -83,8 +85,16 @@ h2 {
   font-size: clamp(2.6rem, 6vw, 4.5rem);
 }
 
-/* Plywood surface: layered grain built from gradients, no image files. */
+/* Plywood surface: layered grain built from gradients, no image files.
+   Text and borders on the wood switch back to burnt-dark ink. */
 .ply {
+  --ink: #1a120c;
+  --ink-soft: #5a4a3c;
+  --surface: #fbfbfa;
+  --edge: #1a120c;
+  --cut: #e5302a;
+  --score: #2b59f5;
+  color: var(--ink);
   background-color: var(--ply);
   background-image:
     repeating-linear-gradient(
@@ -117,7 +127,7 @@ h2 {
   font-variation-settings: 'wdth' 110;
   text-decoration: none;
   color: var(--ink);
-  background: var(--white);
+  background: var(--surface);
   border: 2px solid var(--ink);
   border-radius: 4px;
   cursor: pointer;
@@ -126,16 +136,16 @@ h2 {
     box-shadow 0.2s,
     background 0.2s,
     color 0.2s;
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--edge);
 }
 .btn:hover {
-  box-shadow: 1px 1px 0 var(--ink);
+  box-shadow: 1px 1px 0 var(--edge);
   translate: 3px 3px;
 }
 .btn.primary {
   background: var(--cut);
   border-color: var(--ink);
-  color: var(--white);
+  color: #fff;
 }
 .btn svg {
   width: 1.1em;
@@ -167,7 +177,7 @@ h2 {
 }
 .tag[aria-pressed='true'] {
   background: var(--score);
-  color: var(--white);
+  color: #0d1020;
 }
 .tags {
   display: flex;
@@ -207,8 +217,9 @@ h2 {
   border-radius: 3px;
 }
 .prose pre {
-  background: var(--ink) !important;
-  color: var(--bed);
+  background: var(--surface) !important;
+  color: var(--ink);
+  border: 1px solid var(--line);
   border-radius: 4px;
   padding: 1.2rem;
   overflow-x: auto;
