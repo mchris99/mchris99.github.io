@@ -1,0 +1,60 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectRow from '../../components/ProjectRow.astro';
+import { getProjects, tagCounts, type Project } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return tagCounts(projects).map(([tag]) => ({
+    params: { tag },
+    props: { tag, list: projects.filter((p) => p.data.tags.includes(tag)) },
+  }));
+}
+interface Props {
+  tag: string;
+  list: Project[];
+}
+const { tag, list } = Astro.props;
+---
+
+<Base title={`Tagged ${tag}`} description={`Projects tagged ${tag}.`}>
+  <section class="wrap">
+    <p class="back"><a href="/tags/">All tags</a></p>
+    <h1>{tag}</h1>
+    <p class="intro">
+      {list.length} {list.length === 1 ? 'project' : 'projects'}.
+      <a href={`/projects/?tag=${encodeURIComponent(tag)}`}>Show them in the project tree</a>
+    </p>
+    <div class="list">
+      {list.map((p) => <ProjectRow project={p} />)}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .back {
+    margin: 2rem 0 0.5rem;
+  }
+  .back a,
+  .intro a {
+    font-weight: 600;
+    text-decoration-color: var(--cut);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+  h1 {
+    font-size: clamp(3.5rem, 12vw, 8rem);
+    color: var(--score);
+    overflow-wrap: anywhere;
+  }
+  .intro {
+    font-size: 1.2rem;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1.2rem;
+    margin: 1rem 0 1.5rem;
+  }
+  .list {
+    display: grid;
+    gap: 1.2rem;
+  }
+</style>

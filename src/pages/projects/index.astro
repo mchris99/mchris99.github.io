@@ -1,0 +1,402 @@
+---
+import Base from '../../layouts/Base.astro';
+import TreeNodeView from '../../components/TreeNode.astro';
+import { getProjects, buildTree, tagCounts } from '../../lib/projects';
+
+const projects = await getProjects();
+const tree = buildTree(projects);
+const tags = tagCounts(projects);
+---
+
+<Base title="Projects" description="Every project in one tree, searchable and filterable by tag.">
+  <section class="wrap">
+    <h1>Projects</h1>
+    <p class="intro">Every project in one tree, grouped by category. Search, or pick tags to narrow it down.</p>
+
+    <div class="controls">
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path>
+        </svg>
+        <span class="sr">Search projects</span>
+        <input id="q" type="search" placeholder="Search projects" autocomplete="off" />
+        <kbd>/</kbd>
+      </label>
+      <div class="tagrow">
+        <div class="tags" id="tagbar">
+          {
+            tags.map(([t, n]) => (
+              <button type="button" class="tag" data-tag={t} aria-pressed="false">
+                {t} <span class="n">{n}</span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+      <p class="status" aria-live="polite">
+        <span id="status">All {projects.length} projects</span>
+        <button type="button" id="clear" class="clear" hidden>Clear search and tags</button>
+      </p>
+    </div>
+
+    <div class="tree" id="tree">
+      {
+        tree.map((b) => (
+          <details class="branch" open style={`--c:${b.color}`} data-branch>
+            <summary>
+              <span class="swatch" />
+              <span class="bname">{b.name}</span>
+              <span class="bcount">
+                {b.count} {b.count === 1 ? 'project' : 'projects'}
+              </span>
+            </summary>
+            <ul class="kids">
+              {b.nodes.map((n) => (
+                <TreeNodeView node={n} />
+              ))}
+            </ul>
+          </details>
+        ))
+      }
+    </div>
+    <p class="empty" id="empty" hidden>No projects match that search. Try another word, or clear the tags.</p>
+  </section>
+</Base>
+
+<script>
+  const q = document.getElementById('q') as HTMLInputElement;
+  const status = document.getElementById('status')!;
+  const empty = document.getElementById('empty')!;
+  const clear = document.getElementById('clear') as HTMLButtonElement;
+  const leaves = [...document.querySelectorAll<HTMLElement>('#tree .leaf')];
+  const branches = [...document.querySelectorAll<HTMLDetailsElement>('[data-branch]')];
+  const active = new Set<string>();
+  let fullText: Set<string> | null = null;
+  let pagefind: any = null;
+  let seq = 0;
+
+  // ?tag=a&tag=b&q=word in the address bar opens the tree pre-filtered.
+  const params = new URLSearchParams(location.search);
+  params.getAll('tag').forEach((t) => active.add(t));
+  q.value = params.get('q') ?? '';
+
+  async function loadPagefind() {
+    if (pagefind !== null) return pagefind;
+    try {
+      const url = '/pagefind/pagefind.js';
+      pagefind = await import(/* @vite-ignore */ url);
+      await pagefind.init?.();
+    } catch {
+      pagefind = false; // missing in local dev; title, summary and tag matching still work
+    }
+    return pagefind;
+  }
+
+  async function runSearch() {
+    const term = q.value.trim();
+    const mine = ++seq;
+    fullText = null;
+    apply();
+    if (!term) return;
+    const pf = await loadPagefind();
+    if (!pf || mine !== seq) return;
+    const res = await pf.debouncedSearch(term, {}, 120);
+    if (!res || mine !== seq) return;
+    const data = await Promise.all(res.results.map((r: any) => r.data()));
+    fullText = new Set(data.map((d: any) => new URL(d.url, location.origin).pathname.replace(/\/?$/, '/')));
+    apply();
+  }
+
+  function apply() {
+    const term = q.value.trim().toLowerCase();
+    const words = term.split(/\s+/).filter(Boolean);
+    const filtered = active.size > 0 || words.length > 0;
+    let shown = 0;
+
+    for (const leaf of leaves) {
+      const tags = (leaf.dataset.tags ?? '').split(' ');
+      const tagOk = [...active].every((t) => tags.includes(t));
+      const text = leaf.dataset.text ?? '';
+      const textOk =
+        !words.length || words.every((w) => text.includes(w)) || (fullText?.has(leaf.dataset.url!) ?? false);
+      const hit = tagOk && textOk;
+      leaf.classList.toggle('miss', !hit);
+      leaf.classList.toggle('match', hit && filtered);
+      if (hit) shown++;
+    }
+    // Keep a parent visible, faded, when one of its sub-projects matches.
+    for (const leaf of leaves) {
+      const kidHit = leaf.querySelector(':scope > .kids .leaf:not(.miss)');
+      leaf.classList.toggle('via-child', leaf.classList.contains('miss') && !!kidHit);
+    }
+    for (const b of branches) {
+      const any = b.querySelector('.leaf:not(.miss)');
+      b.classList.toggle('empty', !any);
+      if (any && filtered) b.open = true;
+    }
+
+    status.textContent = filtered
+      ? `${shown} of ${leaves.length} ${leaves.length === 1 ? 'project' : 'projects'} match`
+      : `All ${leaves.length} projects`;
+    empty.hidden = shown > 0;
+    clear.hidden = !filtered;
+
+    document.querySelectorAll<HTMLButtonElement>('button[data-tag]').forEach((c) => {
+      c.setAttribute('aria-pressed', String(active.has(c.dataset.tag!)));
+    });
+
+    const url = new URL(location.href);
+    url.searchParams.delete('tag');
+    url.searchParams.delete('q');
+    active.forEach((t) => url.searchParams.append('tag', t));
+    if (term) url.searchParams.set('q', q.value.trim());
+    history.replaceState(null, '', url);
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-tag]');
+    if (!btn) return;
+    const t = btn.dataset.tag!;
+    active.has(t) ? active.delete(t) : active.add(t);
+    apply();
+  });
+  clear.addEventListener('click', () => {
+    active.clear();
+    q.value = '';
+    fullText = null;
+    apply();
+    q.focus();
+  });
+  q.addEventListener('input', runSearch);
+  q.addEventListener('focus', loadPagefind, { once: true });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement !== q) {
+      e.preventDefault();
+      q.focus();
+    }
+  });
+
+  if (q.value) runSearch();
+  else apply();
+</script>
+
+<style>
+  h1 {
+    font-size: clamp(4rem, 13vw, 9rem);
+    margin-top: 2rem;
+  }
+  .intro {
+    font-size: 1.25rem;
+    max-width: 50ch;
+    margin: 1rem 0 2.5rem;
+  }
+  .controls {
+    border-top: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    padding: 1.2rem 0;
+    margin-bottom: 2rem;
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0 1rem;
+    background: var(--white);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+  }
+  .search:focus-within {
+    outline: 3px solid var(--score);
+    outline-offset: 2px;
+  }
+  .search svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    flex: none;
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    font: inherit;
+    font-size: 1.3rem;
+    font-weight: 600;
+    padding: 0.8rem 0;
+    color: var(--ink);
+  }
+  kbd {
+    font-family: var(--body);
+    font-size: 0.85rem;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 3px;
+    padding: 0 0.45rem;
+    color: var(--ink-soft);
+  }
+  .tagrow {
+    margin-top: 1rem;
+  }
+  .n {
+    opacity: 0.65;
+    font-weight: 500;
+  }
+  .status {
+    margin: 1rem 0 0;
+    color: var(--ink-soft);
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .clear {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: var(--cut);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .empty {
+    font-size: 1.3rem;
+    padding: 1rem 0;
+  }
+  @media (max-width: 640px) {
+    kbd {
+      display: none;
+    }
+  }
+</style>
+
+<style is:global>
+  .tree ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .branch {
+    margin-bottom: 2.2rem;
+    transition: opacity 0.25s;
+  }
+  .branch.empty {
+    opacity: 0.35;
+  }
+  .branch > summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    cursor: pointer;
+    padding: 0.3rem 0 0.6rem;
+  }
+  .branch > summary::-webkit-details-marker {
+    display: none;
+  }
+  .branch .swatch {
+    width: 22px;
+    height: 22px;
+    background: var(--c);
+    border: 2px solid var(--ink);
+    flex: none;
+    transition: transform 0.25s;
+  }
+  .branch:not([open]) .swatch {
+    transform: rotate(-90deg) scale(0.8);
+  }
+  .bname {
+    font-family: var(--stencil);
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1;
+  }
+  .bcount {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    align-self: flex-end;
+    padding-bottom: 0.35rem;
+  }
+
+  /* branch lines */
+  .tree .kids {
+    position: relative;
+    margin-left: 10px;
+    padding-left: 2rem;
+  }
+  .tree .kids::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 2.1rem;
+    border-left: 2px dashed var(--ink-soft);
+    transition: border-color 0.2s;
+  }
+  .leaf {
+    position: relative;
+    padding: 0.4rem 0;
+  }
+  .leaf > .item {
+    position: relative;
+    padding: 0.9rem 1.1rem 1rem;
+    background: var(--white);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    max-width: 760px;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+  .leaf > .item::before {
+    content: '';
+    position: absolute;
+    left: calc(-2rem - 2px);
+    top: 2.05rem;
+    width: 2rem;
+    border-top: 2px dashed var(--ink-soft);
+    transition: border-color 0.2s;
+  }
+  /* hovering a project lights its path back to the category */
+  .branch:has(.item:hover) > .kids::before,
+  .leaf:has(.item:hover) > .kids::before {
+    border-left: 2px solid var(--c);
+  }
+  .leaf:has(.item:hover) > .item::before {
+    border-top: 2px solid var(--c);
+  }
+  .leaf > .item:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--c);
+  }
+  .leaf .title {
+    font-family: var(--stencil);
+    font-weight: 800;
+    font-size: 2rem;
+    line-height: 1;
+    text-decoration: none;
+    margin-right: 0.8rem;
+  }
+  .leaf .title:hover {
+    color: var(--c);
+  }
+  .leaf .when {
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+  }
+  .leaf .sum {
+    margin: 0.35rem 0 0.75rem;
+  }
+  .leaf.miss > .item {
+    display: none;
+  }
+  .leaf.miss.via-child > .item {
+    display: block;
+    opacity: 0.4;
+  }
+  .leaf.miss:not(.via-child) {
+    padding: 0;
+  }
+  .leaf.match > .item {
+    box-shadow: 5px 5px 0 var(--c);
+  }
+</style>

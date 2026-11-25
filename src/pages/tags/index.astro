@@ -1,0 +1,68 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getProjects, tagCounts } from '../../lib/projects';
+
+const projects = await getProjects();
+const tags = tagCounts(projects);
+const max = Math.max(1, ...tags.map(([, n]) => n));
+---
+
+<Base title="Tags" description="Every tag used across my projects.">
+  <section class="wrap">
+    <h1>Tags</h1>
+    <p class="intro">{tags.length} tags across {projects.length} projects. Bigger tags show up on more projects.</p>
+    <ul class="cloud">
+      {
+        tags.map(([t, n]) => (
+          <li>
+            <a href={`/tags/${t}/`} style={`--s:${0.8 + (n / max) * 1.6}`}>
+              {t}
+              <span class="n">{n}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>
+
+<style>
+  h1 {
+    font-size: clamp(4rem, 13vw, 9rem);
+    margin-top: 2rem;
+  }
+  .intro {
+    font-size: 1.25rem;
+    margin: 1rem 0 2.5rem;
+  }
+  .cloud {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.6rem;
+    align-items: baseline;
+    border-top: 2px solid var(--ink);
+    padding-top: 2rem;
+  }
+  .cloud a {
+    font-family: var(--stencil);
+    font-weight: 800;
+    font-size: calc(var(--s) * 2rem);
+    line-height: 1.1;
+    color: var(--score);
+    text-decoration: none;
+  }
+  .cloud a:hover {
+    color: var(--cut);
+  }
+  .n {
+    font-family: var(--body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    vertical-align: super;
+    margin-left: 0.15rem;
+  }
+</style>

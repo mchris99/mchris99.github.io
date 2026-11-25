@@ -1,0 +1,31 @@
+---
+import { STATUS_LABEL, formatDate, type TreeNode } from '../lib/projects';
+
+interface Props {
+  node: TreeNode;
+}
+const { node } = Astro.props;
+const p = node.project;
+const { title, summary, tags, status, date } = p.data;
+const text = `${title} ${summary} ${tags.join(' ')} ${p.data.category}`.toLowerCase();
+---
+
+<li class="leaf" data-url={`/projects/${p.id}/`} data-tags={tags.join(' ')} data-text={text}>
+  <div class="item">
+    <a href={`/projects/${p.id}/`} class="title">{title}</a>
+    <span class="when">{formatDate(date)}, {STATUS_LABEL[status].toLowerCase()}</span>
+    <p class="sum">{summary}</p>
+    <div class="tags">
+      {tags.map((t) => <button type="button" class="tag" data-tag={t} aria-pressed="false">{t}</button>)}
+    </div>
+  </div>
+  {
+    node.children.length > 0 && (
+      <ul class="kids">
+        {node.children.map((c) => (
+          <Astro.self node={c} />
+        ))}
+      </ul>
+    )
+  }
+</li>

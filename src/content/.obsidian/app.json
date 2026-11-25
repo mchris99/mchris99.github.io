@@ -1,0 +1,6 @@
+{
+  "attachmentFolderPath": "./",
+  "useMarkdownLinks": true,
+  "newLinkFormat": "relative",
+  "showFrontmatter": true
+}

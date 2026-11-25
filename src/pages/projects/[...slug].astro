@@ -1,0 +1,201 @@
+---
+import Base from '../../layouts/Base.astro';
+import Cover from '../../components/Cover.astro';
+import ProjectRow from '../../components/ProjectRow.astro';
+import { render } from 'astro:content';
+import { getProjects, categoryColor, STATUS_LABEL, formatDate, type Project } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  const all = await getProjects();
+  return all.map((project) => ({ params: { slug: project.id }, props: { project, all } }));
+}
+
+interface Props {
+  project: Project;
+  all: Project[];
+}
+const { project, all } = Astro.props;
+const { Content } = await render(project);
+const { title, summary, category, tags, status, date, github, demo, parent } = project.data;
+const parentProject = parent ? all.find((p) => p.id === parent.toLowerCase()) : undefined;
+const children = all.filter((p) => p.data.parent?.toLowerCase() === project.id);
+const related = all
+  .filter((p) => p.id !== project.id && !children.includes(p) && p.id !== parentProject?.id)
+  .map((p) => ({ p, score: p.data.tags.filter((t) => tags.includes(t)).length }))
+  .filter((x) => x.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3)
+  .map((x) => x.p);
+---
+
+<Base title={title} description={summary}>
+  <article class="wrap" data-pagefind-body>
+    <nav class="crumbs" aria-label="Breadcrumb" data-pagefind-ignore>
+      <a href="/projects/">Projects</a>
+      <span aria-hidden="true">/</span>
+      <span class="cat"><span class="swatch" style={`background:${categoryColor(category)}`}></span>{category}</span>
+      {
+        parentProject && (
+          <>
+            <span aria-hidden="true">/</span>
+            <a href={`/projects/${parentProject.id}/`}>{parentProject.data.title}</a>
+          </>
+        )
+      }
+    </nav>
+
+    <h1>{title}</h1>
+    <p class="summary">{summary}</p>
+
+    <div class="facts" data-pagefind-ignore>
+      <p>{formatDate(date)}, {STATUS_LABEL[status].toLowerCase()}</p>
+      <div class="links">
+        {
+          github && (
+            <a class="btn" href={github} data-magnetic>
+              View the code on GitHub
+            </a>
+          )
+        }
+        {
+          demo && (
+            <a class="btn primary" href={demo} data-magnetic>
+              Try the demo
+            </a>
+          )
+        }
+      </div>
+    </div>
+
+    {project.data.cover && <Cover project={project} size="hero" />}
+
+    <div class="body">
+      <div class="prose"><Content /></div>
+      <aside data-pagefind-ignore>
+        <h2>Tags</h2>
+        <div class="tags">
+          {tags.map((t) => <a class="tag" href={`/tags/${t}/`}>{t}</a>)}
+        </div>
+        {
+          children.length > 0 && (
+            <>
+              <h2>Parts of this project</h2>
+              <ul class="kids">
+                {children.map((c) => (
+                  <li>
+                    <a href={`/projects/${c.id}/`}>{c.data.title}</a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )
+        }
+      </aside>
+    </div>
+  </article>
+
+  {
+    related.length > 0 && (
+      <section class="wrap related" data-pagefind-ignore>
+        <h2>Related projects</h2>
+        <div class="list">
+          {related.map((p) => (
+            <ProjectRow project={p} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .crumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 2rem 0 1.5rem;
+    color: var(--ink-soft);
+  }
+  .crumbs a {
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration-color: var(--cut);
+    text-underline-offset: 3px;
+  }
+  .cat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .swatch {
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--ink);
+  }
+  h1 {
+    font-size: clamp(3.6rem, 11vw, 8.5rem);
+    max-width: 14ch;
+  }
+  .summary {
+    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+    font-weight: 600;
+    font-variation-settings: 'wdth' 110;
+    max-width: 40ch;
+    margin: 1.2rem 0 1.6rem;
+    line-height: 1.3;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-bottom: 2rem;
+  }
+  .facts p {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  .links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 3rem 5rem;
+    margin-top: 3rem;
+  }
+  aside h2 {
+    font-size: 1.8rem;
+    margin: 0 0 0.8rem;
+  }
+  aside h2:not(:first-child) {
+    margin-top: 2rem;
+  }
+  .kids {
+    padding-left: 1.1rem;
+  }
+  .kids li::marker {
+    color: var(--cut);
+  }
+  @media (max-width: 820px) {
+    .body {
+      grid-template-columns: 1fr;
+    }
+  }
+  .related {
+    margin-top: 5rem;
+  }
+  .related h2 {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .list {
+    display: grid;
+    gap: 1.2rem;
+  }
+</style>
