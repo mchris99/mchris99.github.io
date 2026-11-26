@@ -12,7 +12,7 @@ github: https://github.com/mchris99/my-tool-library
 demo:
 ---
 
-The Milwaukee Tool Library is a local nonprofit that wanted its own member database and online checkout system. I gathered requirements from the people who run its daily operations, designed the database in DBML, and am building it as a WordPress plugin with PHP and SQL.
+The [Milwaukee Tool Library](https://mkelibrary.org/) is a local nonprofit that wanted its own member database and online checkout system. I gathered requirements from the people who run its daily operations, designed the database in DBML, and am building it as a WordPress plugin with PHP and SQL.
 
 I also wrote a workflow for volunteers on how to store and upload sensitive member documents, such as the proof of address used to verify residency.
 
