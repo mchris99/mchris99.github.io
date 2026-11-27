@@ -10,7 +10,7 @@ tags:
   - woodworking
   - product-design
   - milwaukee
-status: in-progress
+status: finished
 featured: true
 cover:
 github:
