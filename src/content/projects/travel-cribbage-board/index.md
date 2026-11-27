@@ -4,7 +4,12 @@ summary: A pocket-sized, laser-cut folding cribbage board with Milwaukee-themed 
 date: 2026-11-12
 category: Laser-Cut Designs
 parent:
-tags: [laser-cutting, svg, woodworking, product-design, milwaukee]
+tags:
+  - laser-cutting
+  - svg
+  - woodworking
+  - product-design
+  - milwaukee
 status: in-progress
 featured: true
 cover:
