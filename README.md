@@ -49,6 +49,21 @@ If a field is wrong (a tag with a capital letter, a date in the wrong format, a 
 
 The repo is public, so keep unfinished drafts in your main vault until they're ready, or use `draft: true` and remember the text is still visible on GitHub.
 
+## Images
+
+Put image files in the project's own folder, next to its `index.md`, and give each one a short caption:
+
+```
+![Front panel after cutting](front.jpg)
+```
+
+- **One image on a line:** it's shown full width with the caption under it.
+- **Several images on the same line:** they sit side by side.
+- **SVG cut files:** they're shown on a plywood panel, with the hairline laser lines drawn thick enough to see. The file itself isn't changed.
+- Visitors can click any image to see it larger.
+
+Leave a blank line between a paragraph and the images, or they'll be treated as part of the paragraph.
+
 ## Updating other things
 
 - **Resume:** replace `public/resume.pdf` and push.

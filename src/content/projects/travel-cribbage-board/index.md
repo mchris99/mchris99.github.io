@@ -22,3 +22,5 @@ The pegs have a Milwaukee theme: a beer stein, a lighthouse, and a cheese wedge.
 
 The cover is pleather and has a monogram on one side and a map of Wisconsin on the other.
 
+
+![Cut file, version 9](travel-cribbage-board-v9.svg)

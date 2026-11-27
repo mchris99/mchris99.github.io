@@ -39,3 +39,26 @@ document.querySelectorAll<HTMLElement>('[data-cutline]').forEach((el) => {
   size();
   new ResizeObserver(size).observe(el);
 });
+
+// Click a figure in a write-up to see it large. Esc, the backdrop or Close shuts it.
+const figs = document.querySelectorAll<HTMLElement>('.prose figure.fig img, .prose figure.fig .cutfile');
+if (figs.length) {
+  const box = document.createElement('dialog');
+  box.className = 'lightbox';
+  document.body.appendChild(box);
+  box.addEventListener('click', () => box.close());
+  figs.forEach((img) => {
+    img.addEventListener('click', () => {
+      const fig = img.closest('figure')!;
+      const copy = fig.cloneNode(true) as HTMLElement;
+      copy.querySelector('img')?.removeAttribute('loading');
+      copy.style.transform = '';
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'close';
+      close.textContent = 'Close';
+      box.replaceChildren(close, copy);
+      box.showModal();
+    });
+  });
+}

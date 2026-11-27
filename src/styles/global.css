@@ -189,6 +189,9 @@ h2 {
 .prose {
   font-size: 1.2rem;
   line-height: 1.65;
+}
+/* text keeps a readable line length; figures and galleries may use the full column */
+.prose > :not(figure):not(.gallery) {
   max-width: var(--measure);
 }
 .prose p {
@@ -231,8 +234,133 @@ h2 {
 }
 .prose img {
   margin: 2rem 0;
-  border: 2px solid var(--ink);
   border-radius: 4px;
+}
+
+/* ---------- figures and galleries (built by src/lib/rehype-figures.mjs) ---------- */
+.prose figure.fig {
+  margin: 2.2rem 0;
+  display: flex;
+  flex-direction: column;
+}
+.prose .gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1.4rem;
+  margin: 2.2rem 0;
+}
+.prose .gallery figure.fig {
+  margin: 0;
+}
+.prose figure.fig img {
+  margin: 0;
+  width: 100%;
+  height: auto;
+  cursor: zoom-in;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.prose .gallery figure.fig:not(.drawing) img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+/* cut files sit on a plywood panel, like a drawing laid on the stock */
+.prose figure.drawing {
+  border: 2px solid #1a120c;
+  border-radius: 8px;
+  padding: 1.4rem 1.4rem 0.9rem;
+}
+.prose figure.drawing img {
+  border: 0;
+  border-radius: 0;
+  flex: 1;
+  min-height: 0;
+  max-height: 460px;
+  object-fit: contain;
+}
+.prose figure.drawing .cutfile {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+  flex: 1;
+  cursor: zoom-in;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* laser files use hairline strokes; draw them at a readable width on screen */
+.cutfile * {
+  vector-effect: non-scaling-stroke;
+}
+.cutfile [stroke]:not([stroke='none']) {
+  stroke-width: 1.4px;
+}
+.prose figure.drawing:hover img,
+.prose figure.drawing:hover .cutfile {
+  transform: scale(1.03);
+}
+.lightbox .cutfile {
+  display: block;
+  width: min(88vw, 1100px);
+  height: auto;
+  max-height: 78vh;
+  cursor: zoom-out;
+}
+.lightbox .cutfile [stroke]:not([stroke='none']) {
+  stroke-width: 1.8px;
+}
+.prose figcaption {
+  margin-top: 0.7rem;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+/* click-to-enlarge view */
+.lightbox {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: 94vw;
+  max-height: 92vh;
+  overflow: visible;
+}
+.lightbox::backdrop {
+  background: rgb(8 9 11 / 0.88);
+  backdrop-filter: blur(4px);
+}
+.lightbox figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.lightbox figure.drawing {
+  border: 2px solid #1a120c;
+  border-radius: 10px;
+  padding: 2rem 2rem 1.2rem;
+}
+.lightbox img {
+  max-width: 88vw;
+  max-height: 78vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  cursor: zoom-out;
+}
+.lightbox figcaption {
+  margin-top: 0.8rem;
+  color: var(--ink-soft);
+}
+.lightbox .close {
+  position: absolute;
+  top: -2.6rem;
+  right: 0;
+  background: none;
+  border: 0;
+  color: #e6e8ea;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 .prose blockquote {
   margin: 1.5em 0;
