@@ -31,8 +31,8 @@ const shown = (featured.length ? featured : projects).slice(0, 6);
             )
           }
           <a class="btn" href={`mailto:${email}`} data-magnetic>Email me</a>
-          {github && <a class="btn" href={github} data-magnetic>GitHub</a>}
-          {linkedin && <a class="btn" href={linkedin} data-magnetic>LinkedIn</a>}
+          {github && <a class="btn" href={github} target="_blank" rel="noopener" data-magnetic>GitHub</a>}
+          {linkedin && <a class="btn" href={linkedin} target="_blank" rel="noopener" data-magnetic>LinkedIn</a>}
         </div>
       </div>
     </div>
