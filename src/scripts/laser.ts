@@ -263,26 +263,14 @@ export async function startLaser(canvas: HTMLCanvasElement, lines: string[]) {
     if (!auto) on = false;
   });
 
-  // Clicking the letters wipes the engraving so it can be engraved again.
-  const onLetters = (e: MouseEvent) => {
-    const r = canvas.getBoundingClientRect();
-    const x = (e.clientX - r.left) * dpr;
-    const y = (e.clientY - r.top) * dpr;
-    // check a small neighborhood so the thin stencil strokes are easy to hit
-    const d = Math.round(6 * dpr);
-    const px = fctx.getImageData(Math.max(0, x - d), Math.max(0, y - d), d * 2, d * 2).data;
-    for (let i = 3; i < px.length; i += 4) if (px[i] > 0) return true;
-    return false;
-  };
-  canvas.addEventListener('click', (e) => {
-    if (reduce || !onLetters(e)) return;
+  // Clicking anywhere on the panel wipes the engraving so it can be engraved again.
+  const panel = canvas.closest('.sheet') ?? canvas;
+  panel.addEventListener('click', (e) => {
+    if (reduce || (e.target as HTMLElement).closest('a, button')) return;
     auto = null;
     complete = false;
     clearing = 14;
     sctx.clearRect(0, 0, w, h);
-  });
-  canvas.addEventListener('pointermove', (e) => {
-    canvas.style.cursor = onLetters(e) ? 'pointer' : '';
   });
 
   let rt: number | undefined;
