@@ -52,7 +52,7 @@ const links = [
         }
         {
           about?.data.resume && (
-            <a href={about.data.resume} download>
+            <a href="/resume/" aria-current={isActive('/resume/') ? 'page' : undefined}>
               Resume
             </a>
           )
@@ -73,7 +73,7 @@ const links = [
         <div class="foot-links">
           {about?.data.github && <a href={about.data.github}>GitHub</a>}
           {about?.data.linkedin && <a href={about.data.linkedin}>LinkedIn</a>}
-          {about?.data.resume && <a href={about.data.resume} download>Resume (PDF)</a>}
+          {about?.data.resume && <a href="/resume/">Resume</a>}
         </div>
       </div>
     </footer>
