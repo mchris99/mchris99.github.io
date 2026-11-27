@@ -39,7 +39,7 @@ src/content/
 | `category` | yes | Branch of the project tree, e.g. `Software & Databases`. A new name creates a new branch. |
 | `parent` | no | Folder name of another project, to nest this one under it in the tree |
 | `tags` | no | Lowercase with dashes, e.g. `[python, database-design]` |
-| `status` | no | `idea`, `in-progress` (default) or `complete` |
+| `status` | no | `idea`, `in-progress` (default) or `complete` (`finished` and `done` also work) |
 | `featured` | no | `true` puts it on the home page |
 | `draft` | no | `true` hides it from the site |
 | `cover` | no | Photo file in the same folder, e.g. `./cover.jpg` |

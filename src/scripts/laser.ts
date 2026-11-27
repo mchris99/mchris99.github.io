@@ -38,6 +38,7 @@ export async function startLaser(canvas: HTMLCanvasElement, lines: string[]) {
     on = false;
   let auto: { t0: number; dur: number } | null = null;
   let userMoved = false;
+  let clearing = 0; // frames left in the wipe after a click on the name
   const sparks: { x: number; y: number; vx: number; vy: number; life: number }[] = [];
 
   const setFont = (c: CanvasRenderingContext2D) => {
@@ -203,6 +204,15 @@ export async function startLaser(canvas: HTMLCanvasElement, lines: string[]) {
   }
 
   function frame(now: number) {
+    if (clearing > 0) {
+      clearing--;
+      mctx.globalCompositeOperation = 'destination-out';
+      mctx.fillStyle = 'rgba(0,0,0,0.28)';
+      mctx.fillRect(0, 0, w, h);
+      mctx.globalCompositeOperation = 'source-over';
+      if (clearing === 0) mctx.clearRect(0, 0, w, h);
+      dirty = true;
+    }
     if (auto) {
       const p = Math.min(1, (now - auto.t0) / auto.dur);
       const pos = autoPos(p);
@@ -235,7 +245,7 @@ export async function startLaser(canvas: HTMLCanvasElement, lines: string[]) {
       const x = e.clientX - r.left;
       const y = e.clientY - r.top;
       if (!userMoved && e.pointerType === 'mouse') userMoved = true;
-      if (auto) return; // let the automatic pass finish its run
+      if (auto || clearing > 0) return; // let the automatic pass or the wipe finish
       if (!on) {
         px = x;
         py = y;
@@ -251,6 +261,28 @@ export async function startLaser(canvas: HTMLCanvasElement, lines: string[]) {
   );
   host.addEventListener('pointerleave', () => {
     if (!auto) on = false;
+  });
+
+  // Clicking the letters wipes the engraving so it can be engraved again.
+  const onLetters = (e: MouseEvent) => {
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * dpr;
+    const y = (e.clientY - r.top) * dpr;
+    // check a small neighborhood so the thin stencil strokes are easy to hit
+    const d = Math.round(6 * dpr);
+    const px = fctx.getImageData(Math.max(0, x - d), Math.max(0, y - d), d * 2, d * 2).data;
+    for (let i = 3; i < px.length; i += 4) if (px[i] > 0) return true;
+    return false;
+  };
+  canvas.addEventListener('click', (e) => {
+    if (reduce || !onLetters(e)) return;
+    auto = null;
+    complete = false;
+    clearing = 14;
+    sctx.clearRect(0, 0, w, h);
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    canvas.style.cursor = onLetters(e) ? 'pointer' : '';
   });
 
   let rt: number | undefined;

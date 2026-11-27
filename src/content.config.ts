@@ -26,7 +26,17 @@ const projects = defineCollection({
       category: z.string(),
       parent: z.string().nullish(),
       tags: z.array(tag).default([]),
-      status: z.enum(['idea', 'in-progress', 'complete']).default('in-progress'),
+      // "finished", "done" and "completed" all count as complete; "in progress" works with or without the dash.
+      status: z.preprocess(
+        (v) => {
+          if (typeof v !== 'string') return v;
+          const s = v.trim().toLowerCase().replace(/\s+/g, '-');
+          if (['finished', 'done', 'completed'].includes(s)) return 'complete';
+          if (['wip', 'active', 'started', 'ongoing'].includes(s)) return 'in-progress';
+          return s;
+        },
+        z.enum(['idea', 'in-progress', 'complete']),
+      ).default('in-progress'),
       featured: z.boolean().default(false),
       draft: z.boolean().default(false),
       cover: image().nullish(),
