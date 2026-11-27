@@ -12,7 +12,8 @@
     "@astrojs/sitemap": "^3.7.6",
     "@fontsource-variable/archivo": "^5.3.0",
     "@fontsource-variable/big-shoulders-stencil": "^5.3.0",
-    "astro": "^7.4.13"
+    "astro": "^7.4.13",
+    "pdfjs-dist": "^6.5.438"
   },
   "devDependencies": {
     "pagefind": "^1.6.0"

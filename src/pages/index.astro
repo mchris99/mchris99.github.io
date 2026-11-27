@@ -25,17 +25,14 @@ const shown = (featured.length ? featured : projects).slice(0, 6);
         <div class="ctas">
           {
             resume && (
-              <a class="btn primary" href={resume} download data-magnetic>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
-                  <path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16" />
-                </svg>
-                Download resume
+              <a class="btn primary" href="/resume/" data-magnetic>
+                View resume
               </a>
             )
           }
           <a class="btn" href={`mailto:${email}`} data-magnetic>Email me</a>
-          {github && <a class="btn" href={github} data-magnetic>GitHub</a>}
-          {linkedin && <a class="btn" href={linkedin} data-magnetic>LinkedIn</a>}
+          {github && <a class="btn" href={github} target="_blank" rel="noopener" data-magnetic>GitHub</a>}
+          {linkedin && <a class="btn" href={linkedin} target="_blank" rel="noopener" data-magnetic>LinkedIn</a>}
         </div>
       </div>
     </div>
